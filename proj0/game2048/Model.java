@@ -94,7 +94,7 @@ public class Model extends Observable {
         setChanged();
     }
 
-    /** Tilt the board toward SIDE. Return true iff this changes the board.
+    /** Tilt the board toward SIDE. Return true if this changes the board.
      *
      * 1. If two Tile objects are adjacent in the direction of motion and have
      *    the same value, they are merged into one Tile of twice the original
@@ -113,12 +113,75 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+
+        for (int c = 0; c < board.size(); c++) {
+            // Begin for each column
+            int maxNullRow = -1;
+            int mergeRows[] = findMergeRowPoints(c);
+
+            for (int r = board.size() -1; r >=0 ; r--) {
+                // Begin for each Tile
+                Tile currTile = board.tile(c,r);
+
+                if (currTile==null){
+                    if(r>maxNullRow) maxNullRow=r;
+                    continue;
+                }
+
+                if(r==mergeRows[0] && r>maxNullRow) maxNullRow = r;
+
+                if(maxNullRow>=0 && mergeRows[0]!=-1){
+                    boolean isMerged = board.move(c,maxNullRow,currTile);
+                    if(isMerged==true){
+                        score += board.tile(c,maxNullRow).value();
+                        maxNullRow = maxNullRow - 1;
+                    }
+//                    else if(board.tile(c,r) == null){
+//                        maxNullRow = maxNullRow - 1;
+//                    }
+
+                    changed = true;
+                } else if (maxNullRow>=0 && mergeRows[0]==-1) {
+                    board.move(c,maxNullRow,currTile);
+                    maxNullRow = maxNullRow -1;
+                    changed = true;
+                }
+                // End for each Tile
+            }
+            // End for each column
+        }
+        board.setViewingPerspective(Side.NORTH);
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    private int[] findMergeRowPoints(int col){
+        int[] mergeRowPoints = new int[]{-1,-1};
+
+        for (int r = board.size() -1; r >=0 ; r--) {
+            Tile currTile = board.tile(col,r);
+            if(currTile==null) continue;
+
+            int i = r-1;
+            while(i>=0){
+                Tile nextTile = board.tile(col,i);
+                if(nextTile!=null){
+                    if(currTile.value() == nextTile.value()) {
+                        mergeRowPoints[0] = r;
+                        mergeRowPoints[1] = i;
+                        return mergeRowPoints; // return [r,i]
+                    }
+                }
+                i = i -1;
+            }
+
+        }
+        return mergeRowPoints;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -138,6 +201,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if( b.tile(i,j) == null ){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,6 +218,14 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                if( b.tile(i,j) == null ) continue;
+                if( b.tile(i,j).value() == MAX_PIECE ){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +237,26 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        if(emptySpaceExists(b)) return true;
+
+        int[] colDir = {0,1,0,-1};
+        int[] rowDir = {1,0,-1,0};
+
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++) {
+                for (int dir = 0; dir < 4; dir++) {
+                    if(isOutOfBoundary(b, i+colDir[dir], j+rowDir[dir])) continue;
+                    if( b.tile(i,j).value() == b.tile(i+colDir[dir],j+rowDir[dir]).value()) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isOutOfBoundary(Board b, int i, int j){
+        if( i < 0 || i >= b.size() || j < 0 || j >= b.size() ){
+            return true;
+        }
         return false;
     }
 
