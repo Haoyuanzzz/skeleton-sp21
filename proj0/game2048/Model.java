@@ -117,34 +117,27 @@ public class Model extends Observable {
 
         for (int c = 0; c < board.size(); c++) {
             // Begin for each column
-            int maxNullRow = -1;
             int mergeRows[] = findMergeRowPoints(c);
+            int new_maxNullRow = findMaxNullRow(c);
+            int nextMovDestRow = findNextMovDestRow(mergeRows[0], new_maxNullRow);
 
             for (int r = board.size() -1; r >=0 ; r--) {
                 // Begin for each Tile
                 Tile currTile = board.tile(c,r);
 
-                if (currTile==null){
-                    if(r>maxNullRow) maxNullRow=r;
-                    continue;
-                }
+                if (currTile==null) continue;
 
-                if(r==mergeRows[0] && r>maxNullRow) maxNullRow = r;
-
-                if(maxNullRow>=0 && mergeRows[0]!=-1){
-                    boolean isMerged = board.move(c,maxNullRow,currTile);
+                if(nextMovDestRow>r && nextMovDestRow!=-1){//current TILE need to move
+                    boolean isMerged = board.move(c,nextMovDestRow,currTile);
                     if(isMerged==true){
-                        score += board.tile(c,maxNullRow).value();
-                        maxNullRow = maxNullRow - 1;
+                        score += board.tile(c,nextMovDestRow).value();
+                        new_maxNullRow = findMaxNullRow(c);
+                        nextMovDestRow = findNextMovDestRow(-1,new_maxNullRow);
+                    } else if (isMerged==false) {
+                        mergeRows= findMergeRowPoints(c);
+                        new_maxNullRow = findMaxNullRow(c);
+                        nextMovDestRow = findNextMovDestRow(mergeRows[0], new_maxNullRow);
                     }
-//                    else if(board.tile(c,r) == null){
-//                        maxNullRow = maxNullRow - 1;
-//                    }
-
-                    changed = true;
-                } else if (maxNullRow>=0 && mergeRows[0]==-1) {
-                    board.move(c,maxNullRow,currTile);
-                    maxNullRow = maxNullRow -1;
                     changed = true;
                 }
                 // End for each Tile
@@ -160,6 +153,9 @@ public class Model extends Observable {
         return changed;
     }
 
+    /** For each column (col), find the row index of two merging tiles and return with [upMergeRowIndex, downMergeRowIndex]
+     *  IF NOT MERGED, return with [-1,-1]
+     */
     private int[] findMergeRowPoints(int col){
         int[] mergeRowPoints = new int[]{-1,-1};
 
@@ -182,6 +178,42 @@ public class Model extends Observable {
 
         }
         return mergeRowPoints;
+    }
+
+    /** For each column (col), find the most up NOT null row index and return with maxNullRowIndex
+     *  IF NO NULL Tile, return with -1
+     */
+    private int findMaxNullRow(int col){
+        int maxNullRow = -1;
+
+        for (int r = board.size() -1; r >=0 ; r--) {
+            Tile currTile = board.tile(col,r);
+            if(currTile==null){
+                maxNullRow = r;
+                return maxNullRow;
+            }
+        }
+
+        return maxNullRow;
+    }
+
+    /** Two situation decide the next move destination of A Tile:
+     *  Situation1: tiles need to merge
+     *  Situation2: there exists null space to move
+     *  This method combine these two situations and return the final move destination Row index of A Tile
+     */
+    private int findNextMovDestRow(int upmerge, int notnull){
+        int nextMovDestRow = -1;
+
+        if(upmerge!=-1 && notnull!=-1){//Both Situation1 and 2 happen
+            nextMovDestRow = Math.max(upmerge, notnull);
+        } else if (upmerge==-1 && notnull!=-1) {//only Situation 2
+            nextMovDestRow = notnull;
+        } else if (upmerge!=-1 && notnull==-1) {//only Situation 1
+            nextMovDestRow = upmerge;
+        }
+
+        return nextMovDestRow;
     }
 
     /** Checks if the game is over and sets the gameOver variable
