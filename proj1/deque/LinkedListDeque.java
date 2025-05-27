@@ -1,6 +1,8 @@
 package deque;
 
-public class LinkedListDeque<T>{
+import java.util.Iterator;
+
+public class LinkedListDeque<T> implements Deque<T>, Iterable<T>{
     private BasicNode sentinel;
     private int size;
 
@@ -28,6 +30,7 @@ public class LinkedListDeque<T>{
         size = 0;
     }
 
+    @Override
     public void addFirst(T item){
         BasicNode temp = new BasicNode(sentinel, item, sentinel.next);
         sentinel.next.prev = temp;
@@ -35,6 +38,7 @@ public class LinkedListDeque<T>{
         size += 1;
     }
 
+    @Override
     public T removeFirst() {
         if(this.isEmpty()) return null;
 
@@ -46,6 +50,7 @@ public class LinkedListDeque<T>{
         return item;
     }
 
+    @Override
     public void addLast(T item){
         BasicNode temp = new BasicNode(sentinel.prev, item, sentinel);
         sentinel.prev.next = temp;
@@ -53,6 +58,7 @@ public class LinkedListDeque<T>{
         size += 1;
     }
 
+    @Override
     public T removeLast() {
         if(this.isEmpty()) return null;
 
@@ -64,6 +70,7 @@ public class LinkedListDeque<T>{
         return item;
     }
 
+    @Override
     public T get(int index){
         if(this.isEmpty() || index>=this.size() || index<=-1 ) return null;
 
@@ -89,18 +96,14 @@ public class LinkedListDeque<T>{
         return getRecursiveHelper(i-1, p.next); //p = p.next
     }
 
-    public boolean isEmpty(){
-        if(sentinel.prev == sentinel && sentinel.next == sentinel){
-            return true;
-        }else{
-            return false;
-        }
-    }
 
+
+    @Override
     public int size(){
         return size;
     }
 
+    @Override
     public void printDeque(){
         printDequeHelper(sentinel.next);
     }
@@ -114,5 +117,60 @@ public class LinkedListDeque<T>{
         System.out.print(start.item + " ");
         printDequeHelper(start.next);
 
+    }
+
+    @Override
+    public Iterator<T> iterator(){
+        return new LinkedListDequeIterator();
+    }
+
+    private class LinkedListDequeIterator implements Iterator<T>{
+        private int wizPos;
+
+        private BasicNode curr;
+
+        public LinkedListDequeIterator(){
+            wizPos = 0;
+            curr = sentinel.next;
+        }
+        @Override
+        public boolean hasNext() {
+            return wizPos < size;
+        }
+
+        @Override
+        public T next() {
+            T returnItem = curr.item;
+            curr = curr.next;
+            wizPos += 1;
+            return returnItem;
+        }
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if(this == o) return true;
+
+        if(o instanceof LinkedListDeque olld){
+            // check linked list deques are of the same size
+            if(olld.size != this.size){
+                return false;
+            }
+
+            // check that all of my items are in the other  deque in the same order
+            BasicNode mycurr = this.sentinel.next;
+            BasicNode ocurr = olld.sentinel.next;
+            for(int i=0; i<this.size; i++){
+                if( ! mycurr.item.equals(ocurr.item) ){
+                    return false;
+                }
+                mycurr = mycurr.next;
+                ocurr = ocurr.next;
+            }
+            return true;
+        }
+
+        // o is not a linked list deque, so return false
+        return false;
     }
 }
