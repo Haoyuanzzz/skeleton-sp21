@@ -148,29 +148,29 @@ public class LinkedListDeque<T> implements Deque<T>, Iterable<T>{
     }
 
     @Override
-    public boolean equals(Object o){
-        if(this == o) return true;
+    public boolean equals(Object o) {
+        if (o == null) return false;
 
-        if(o instanceof LinkedListDeque olld){
-            // check linked list deques are of the same size
-            if(olld.size != this.size){
-                return false;
-            }
+        if (this == o) return true;
 
-            // check that all of my items are in the other  deque in the same order
-            BasicNode mycurr = this.sentinel.next;
-            BasicNode ocurr = olld.sentinel.next;
-            for(int i=0; i<this.size; i++){
-                if( ! mycurr.item.equals(ocurr.item) ){
-                    return false;
-                }
-                mycurr = mycurr.next;
-                ocurr = ocurr.next;
-            }
-            return true;
+        if (this.getClass() != o.getClass()) return false;
+
+        LinkedListDeque<T> olld = (LinkedListDeque<T>) o;
+
+        if (olld.size() != this.size){
+            return false;
         }
 
-        // o is not a linked list deque, so return false
-        return false;
+        // check that all of my items are in the other  deque in the same order
+        BasicNode mycurr = this.sentinel.next;
+        BasicNode ocurr = olld.sentinel.next;
+        for (int i=0; i<this.size; i++){
+            if ( ! mycurr.item.equals(ocurr.item) ){
+                return false;
+            }
+            mycurr = mycurr.next;
+            ocurr = ocurr.next;
+        }
+        return true;
     }
 }

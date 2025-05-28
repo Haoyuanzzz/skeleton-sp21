@@ -141,25 +141,22 @@ public class ArrayDeque<T> implements Deque<T>, Iterable<T>{
     }
 
     @Override
-    public boolean equals(Object o){
-        if(this == o) return true;
+    public boolean equals(Object o) {
+        if (o == null) return false;
 
-        if(o instanceof ArrayDeque oad){
-            // check arraydeques are of the same size
-            if(oad.size != this.size){
+        if (this == o) return true;
+
+        if (this.getClass() != o.getClass()) return false;
+
+        ArrayDeque<T> oad = (ArrayDeque<T>) o;
+
+        if (oad.size() != this.size) return false;
+        for (int i=0; i<this.size; i++){
+            if ( ! oad.get(i).equals(this.get(i)) ){
                 return false;
             }
-
-            // check that all of my items are in the other array deque in the same order
-            for(int i=0; i<this.size; i++){
-                if( ! oad.get(i).equals(this.get(i)) ){
-                    return false;
-                }
-            }
-            return true;
         }
 
-        // o is not an arraydeque, so return false
-        return false;
+        return true;
     }
 }
